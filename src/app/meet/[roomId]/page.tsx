@@ -219,7 +219,8 @@ function InMeetingContent() {
   const [copiedNotesFeedback, setCopiedNotesFeedback] = React.useState(false);
   const [copiedActionsFeedback, setCopiedActionsFeedback] = React.useState(false);
 
-  // POLLING STATE (Replica of existing LiveKit image)
+  // USER ROLE & PERMISSIONS STATE (Super Admin vs User Biasa)
+  const [isSuperAdmin, setIsSuperAdmin] = React.useState(true);
   const [isSuperAdminPollView, setIsSuperAdminPollView] = React.useState(true);
 
   // Sync role from login (Admin vs User Biasa)
@@ -229,8 +230,10 @@ function InMeetingContent() {
       const roleParam = urlParams.get("role");
       const storedRole = localStorage.getItem("falah_user_role");
       if (roleParam === "user" || storedRole === "user") {
+        setIsSuperAdmin(false);
         setIsSuperAdminPollView(false);
       } else if (roleParam === "admin" || storedRole === "admin") {
+        setIsSuperAdmin(true);
         setIsSuperAdminPollView(true);
       }
     }
@@ -1021,8 +1024,8 @@ function InMeetingContent() {
         ))}
       </div>
 
-      {/* FLOATING TOP BANNER: WAITING GUEST APPROVAL NOTIFICATION */}
-      {waitingUsers.length > 0 && (
+      {/* FLOATING TOP BANNER: WAITING GUEST APPROVAL NOTIFICATION (Super Admin only) */}
+      {isSuperAdmin && waitingUsers.length > 0 && (
         <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 backdrop-blur-xl border border-primary/50 rounded-2xl px-4 py-2.5 shadow-2xl flex items-center gap-4 animate-in slide-in-from-top-4 duration-300">
           <div className="flex items-center gap-2.5">
             <div className="relative">
@@ -1077,7 +1080,7 @@ function InMeetingContent() {
       <header className="h-14 px-4 sm:px-6 bg-slate-950/80 backdrop-blur-md border-b border-white/10 flex items-center justify-between z-30 shrink-0">
         {/* Left: Room Title, Code & Timer */}
         <div className="flex items-center gap-3 min-w-0">
-          <Link href="/admin" title="Kembali ke Console Admin" className="shrink-0">
+          <Link href={isSuperAdmin ? "/admin" : "/"} title={isSuperAdmin ? "Kembali ke Console Admin" : "Falah Meet"} className="shrink-0">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white shadow-xs hover:scale-105 transition-transform">
               <Radio className="w-4 h-4 text-white animate-pulse" />
             </div>
@@ -1168,69 +1171,6 @@ function InMeetingContent() {
       <div className="flex-1 flex min-h-0 relative overflow-hidden p-3 gap-3">
         {/* MAIN VIDEO STAGE */}
         <div className="flex-1 flex flex-col justify-center min-w-0 relative">
-          {/* FLOATING ACTIVE POLL OVERLAY (ONLY SHOWN FOR REGULAR PARTICIPANTS IN FALAH MEET BLUE STYLE) */}
-          {showActivePollOverlay && activePoll && activePoll.isOpen && !isSuperAdminPollView && (
-            <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-30 w-72 sm:w-88 p-4 rounded-2xl bg-white/95 backdrop-blur-md shadow-2xl border border-blue-100 text-slate-900 animate-in fade-in zoom-in-95">
-              <div className="flex items-start justify-between gap-2 mb-3">
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600">Polling Berlangsung</span>
-                  </div>
-                  <h4 className="text-xs sm:text-sm font-bold text-[#1e3a8a] leading-snug">
-                    {activePoll.question}
-                  </h4>
-                  <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-1 font-medium">
-                    <Calendar className="w-3 h-3 text-slate-400" />
-                    <span>{activePoll.createdAt}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowActivePollOverlay(false)}
-                  className="text-slate-400 hover:text-slate-600 cursor-pointer p-0.5 rounded-md hover:bg-slate-100 transition-colors"
-                  title="Sembunyikan kartu polling"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Voting options for regular participants */}
-              <div className="space-y-2">
-                <div className="text-[11px] text-slate-500 font-medium">Pilih salah satu jawaban:</div>
-                {activePoll.options.map((opt) => {
-                  const isSelected = userVotedPollOption === opt.id;
-
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => handleVote(opt.id)}
-                      className={`w-full p-2.5 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer ${
-                        isSelected
-                          ? "border-blue-600 bg-blue-50/80 ring-2 ring-blue-500/20 text-[#1e3a8a] font-semibold"
-                          : "border-slate-200 hover:border-blue-300 hover:bg-slate-50 text-slate-800"
-                      }`}
-                    >
-                      <span className="text-xs">{opt.text}</span>
-                      {isSelected ? (
-                        <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
-                      ) : (
-                        <div className="w-4 h-4 rounded-full border border-slate-300 shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {userVotedPollOption && (
-                <div className="mt-3 p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] flex items-center gap-1.5 font-medium animate-in fade-in">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Suara Anda telah tersimpan. Terima kasih!</span>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* PRESENTATION / SCREEN SHARE VIEW */}
           {(layoutMode === "presentation" || isScreenSharing) ? (
             <div className="h-full w-full flex flex-col md:flex-row gap-3 min-h-0">
@@ -1589,14 +1529,16 @@ function InMeetingContent() {
                     <span className="ml-1 w-2 h-2 rounded-full bg-primary inline-block" />
                   )}
                 </button>
-                <button
-                  onClick={() => setActiveDrawer("details")}
-                  className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer shrink-0 ${
-                    activeDrawer === "details" ? "bg-white/10 text-white font-bold" : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  Info & Rekaman
-                </button>
+                {isSuperAdmin && (
+                  <button
+                    onClick={() => setActiveDrawer("details")}
+                    className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer shrink-0 ${
+                      activeDrawer === "details" ? "bg-white/10 text-white font-bold" : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    Info & Rekaman
+                  </button>
+                )}
                 <button
                   onClick={() => setActiveDrawer("polling")}
                   className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer shrink-0 ${
@@ -1619,8 +1561,8 @@ function InMeetingContent() {
             {/* DRAWER CONTENT: PARTICIPANTS TAB */}
             {activeDrawer === "participants" && (
               <div className="flex-1 flex flex-col min-h-0 p-4 space-y-4">
-                {/* WAITING ROOM LIST IN DRAWER (If any) */}
-                {waitingUsers.length > 0 && (
+                {/* WAITING ROOM LIST IN DRAWER (If any - Super Admin only) */}
+                {isSuperAdmin && waitingUsers.length > 0 && (
                   <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-bold text-amber-400 flex items-center gap-1.5">
@@ -1659,56 +1601,58 @@ function InMeetingContent() {
                   </div>
                 )}
 
-                {/* Host Quick Actions */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setParticipants((prev) => prev.map((p) => (p.id === "p-self" ? p : { ...p, isMuted: true })));
-                        alert("Seluruh mikrofon peserta telah dibisukan (Muted All).");
-                      }}
-                      className="flex-1 h-8 text-xs bg-white/5 border-white/15 text-slate-200 hover:bg-white/10 hover:text-white"
-                    >
-                      <MicOff className="w-3 h-3" />
-                      <span>Bisukan Semua</span>
-                    </Button>
+                {/* Host Quick Actions (Super Admin only) */}
+                {isSuperAdmin && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setParticipants((prev) => prev.map((p) => (p.id === "p-self" ? p : { ...p, isMuted: true })));
+                          alert("Seluruh mikrofon peserta telah dibisukan (Muted All).");
+                        }}
+                        className="flex-1 h-8 text-xs bg-white/5 border-white/15 text-slate-200 hover:bg-white/10 hover:text-white"
+                      >
+                        <MicOff className="w-3 h-3" />
+                        <span>Bisukan Semua</span>
+                      </Button>
 
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleLowerAllHands}
-                      className="flex-1 h-8 text-xs bg-white/5 border-white/15 text-amber-300 hover:bg-amber-500/10 hover:text-amber-200"
-                      title="Turunkan Semua Raise Hand Peserta"
-                    >
-                      <Hand className="w-3 h-3" />
-                      <span>Turunkan Semua</span>
-                    </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleLowerAllHands}
+                        className="flex-1 h-8 text-xs bg-white/5 border-white/15 text-amber-300 hover:bg-amber-500/10 hover:text-amber-200"
+                        title="Turunkan Semua Raise Hand Peserta"
+                      >
+                        <Hand className="w-3 h-3" />
+                        <span>Turunkan Semua</span>
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => setInviteModalOpen(true)}
+                        className="flex-1 h-8 text-xs gap-1.5 shadow-xs"
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        <span>Panggil Karyawan</span>
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleSimulateNewWaitingUser}
+                        className="h-8 text-[11px] bg-white/5 border-white/15 text-slate-300 hover:bg-white/10"
+                        title="Simulasi ada karyawan kantor minta izin masuk"
+                      >
+                        + Tamu Masuk
+                      </Button>
+                    </div>
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => setInviteModalOpen(true)}
-                      className="flex-1 h-8 text-xs gap-1.5 shadow-xs"
-                    >
-                      <UserPlus className="w-3.5 h-3.5" />
-                      <span>Panggil Karyawan</span>
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleSimulateNewWaitingUser}
-                      className="h-8 text-[11px] bg-white/5 border-white/15 text-slate-300 hover:bg-white/10"
-                      title="Simulasi ada karyawan kantor minta izin masuk"
-                    >
-                      + Tamu Masuk
-                    </Button>
-                  </div>
-                </div>
+                )}
 
                 {/* Participant List */}
                 <div className="flex-1 overflow-y-auto space-y-2 pr-1">
@@ -1797,8 +1741,8 @@ function InMeetingContent() {
               </div>
             )}
 
-            {/* DRAWER CONTENT: DETAILS TAB */}
-            {activeDrawer === "details" && (
+            {/* DRAWER CONTENT: DETAILS TAB (Super Admin only) */}
+            {isSuperAdmin && activeDrawer === "details" && (
               <div className="flex-1 overflow-y-auto p-4 space-y-5 text-xs">
                 {/* 1. SHARE LINK */}
                 <div>
@@ -1885,12 +1829,14 @@ function InMeetingContent() {
                       <p className="text-[10px] text-slate-400">Jajak pendapat real-time seluruh peserta</p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setIsSuperAdminPollView(!isSuperAdminPollView)}
-                    className="text-[10px] px-2.5 py-1 rounded-md border border-white/15 bg-white/10 text-blue-300 hover:bg-white/20 font-semibold cursor-pointer transition-colors"
-                  >
-                    Simulasi: {isSuperAdminPollView ? "Super Admin" : "Peserta"}
-                  </button>
+                  {isSuperAdmin && (
+                    <button
+                      onClick={() => setIsSuperAdminPollView(!isSuperAdminPollView)}
+                      className="text-[10px] px-2.5 py-1 rounded-md border border-white/15 bg-white/10 text-blue-300 hover:bg-white/20 font-semibold cursor-pointer transition-colors"
+                    >
+                      Simulasi: {isSuperAdminPollView ? "Super Admin" : "Peserta"}
+                    </button>
+                  )}
                 </div>
 
                 {/* SUPER ADMIN VIEW: ACCORDION BUAT PENDAPAT + MONITORING HASIL */}
@@ -2198,19 +2144,20 @@ function InMeetingContent() {
             <PenTool className="w-5 h-5" />
           </Button>
 
-          <Button
-            onClick={() => setNotesModalOpen(true)}
-            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer hidden md:flex"
-            title="Catatan Rapat Bersama (WYSIWYG & Action Items)"
-          >
-            <FileText className="w-5 h-5" />
-          </Button>
+          {isSuperAdmin && (
+            <Button
+              onClick={() => setNotesModalOpen(true)}
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer hidden md:flex"
+              title="Catatan Rapat Bersama (WYSIWYG & Action Items)"
+            >
+              <FileText className="w-5 h-5" />
+            </Button>
+          )}
 
-          {/* POLLING (Opens LiveKit Sidebar & shows active card) */}
+          {/* POLLING (Opens LiveKit Sidebar) */}
           <Button
             onClick={() => {
               setActiveDrawer(activeDrawer === "polling" ? "none" : "polling");
-              setShowActivePollOverlay(true);
             }}
             className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full transition-all cursor-pointer hidden lg:flex ${
               activeDrawer === "polling"
@@ -2222,13 +2169,15 @@ function InMeetingContent() {
             <BarChart3 className="w-5 h-5" />
           </Button>
 
-          <Button
-            onClick={() => setRandomPickerModalOpen(true)}
-            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 text-amber-300 hover:text-amber-200 transition-all cursor-pointer hidden lg:flex"
-            title="Pilih Karyawan Acak"
-          >
-            <Dices className="w-5 h-5" />
-          </Button>
+          {isSuperAdmin && (
+            <Button
+              onClick={() => setRandomPickerModalOpen(true)}
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 text-amber-300 hover:text-amber-200 transition-all cursor-pointer hidden lg:flex"
+              title="Pilih Karyawan Acak"
+            >
+              <Dices className="w-5 h-5" />
+            </Button>
+          )}
 
           <Button
             onClick={() => setVirtualBgModalOpen(true)}
@@ -2271,16 +2220,18 @@ function InMeetingContent() {
             )}
           </Button>
 
-          {/* 9. MEETING DETAILS (TABLET+) */}
-          <Button
-            onClick={() => setActiveDrawer(activeDrawer === "details" ? "none" : "details")}
-            className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full transition-all cursor-pointer hidden sm:flex ${
-              activeDrawer === "details" ? "bg-primary text-white" : "bg-white/10 hover:bg-white/20 text-white"
-            }`}
-            title="Informasi Rapat & Perekaman"
-          >
-            <Info className="w-5 h-5" />
-          </Button>
+          {/* 9. MEETING DETAILS (TABLET+ - Super Admin only) */}
+          {isSuperAdmin && (
+            <Button
+              onClick={() => setActiveDrawer(activeDrawer === "details" ? "none" : "details")}
+              className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full transition-all cursor-pointer hidden sm:flex ${
+                activeDrawer === "details" ? "bg-primary text-white" : "bg-white/10 hover:bg-white/20 text-white"
+              }`}
+              title="Informasi Rapat & Perekaman"
+            >
+              <Info className="w-5 h-5" />
+            </Button>
+          )}
 
           <div className="w-[1px] h-7 bg-white/20 mx-0.5 hidden sm:block" />
 
@@ -2294,18 +2245,23 @@ function InMeetingContent() {
             <span className="hidden sm:inline">Keluar</span>
           </Button>
 
-          {/* PIPELINE DIVIDER (PEMBATAS PIPELINE - TABLET+) */}
-          <div className="w-[2px] h-7 bg-red-400/40 mx-0.5 hidden sm:block" />
+          {/* PIPELINE DIVIDER & 11. END MEETING FOR ALL (Super Admin only) */}
+          {isSuperAdmin && (
+            <>
+              {/* PIPELINE DIVIDER (PEMBATAS PIPELINE - TABLET+) */}
+              <div className="w-[2px] h-7 bg-red-400/40 mx-0.5 hidden sm:block" />
 
-          {/* 11. END MEETING FOR ALL (AKHIRI RAPAT UNTUK SEMUA - TABLET+) */}
-          <Button
-            onClick={() => setEndMeetingForAllModalOpen(true)}
-            className="h-11 sm:h-12 px-3 sm:px-4 rounded-full bg-red-950 hover:bg-red-900 border border-red-500/50 text-red-100 font-bold text-xs gap-1.5 shadow-lg shadow-red-950/60 cursor-pointer hidden sm:flex"
-            title="Akhiri Rapat untuk Seluruh Peserta"
-          >
-            <PhoneOff className="w-4 h-4 text-red-400" />
-            <span className="hidden sm:inline">Akhiri Rapat</span>
-          </Button>
+              {/* 11. END MEETING FOR ALL (AKHIRI RAPAT UNTUK SEMUA - TABLET+) */}
+              <Button
+                onClick={() => setEndMeetingForAllModalOpen(true)}
+                className="h-11 sm:h-12 px-3 sm:px-4 rounded-full bg-red-950 hover:bg-red-900 border border-red-500/50 text-red-100 font-bold text-xs gap-1.5 shadow-lg shadow-red-950/60 cursor-pointer hidden sm:flex"
+                title="Akhiri Rapat untuk Seluruh Peserta"
+              >
+                <PhoneOff className="w-4 h-4 text-red-400" />
+                <span className="hidden sm:inline">Akhiri Rapat</span>
+              </Button>
+            </>
+          )}
         </div>
       </footer>
 
@@ -2347,8 +2303,9 @@ function InMeetingContent() {
         </div>
       </Dialog>
 
-      {/* MODAL: CATATAN RAPAT BERSAMA (WYSIWYG & ACTION ITEMS) */}
-      <Dialog open={notesModalOpen} onOpenChange={setNotesModalOpen} className="max-w-2xl bg-white text-slate-900 border-slate-200">
+      {/* MODAL: CATATAN RAPAT BERSAMA (WYSIWYG & ACTION ITEMS - Super Admin only) */}
+      {isSuperAdmin && (
+        <Dialog open={notesModalOpen} onOpenChange={setNotesModalOpen} className="max-w-2xl bg-white text-slate-900 border-slate-200">
         <DialogHeader>
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
@@ -2555,6 +2512,7 @@ function InMeetingContent() {
           </div>
         </DialogFooter>
       </Dialog>
+      )}
 
       {/* MODAL: VIRTUAL BACKGROUND SELECTOR IN-MEETING */}
       <Dialog open={virtualBgModalOpen} onOpenChange={setVirtualBgModalOpen}>
@@ -2653,125 +2611,129 @@ function InMeetingContent() {
         </DialogFooter>
       </Dialog>
 
-      {/* MODAL: RANDOM USER PICKER */}
-      <Dialog open={randomPickerModalOpen} onOpenChange={setRandomPickerModalOpen} className="max-w-md bg-card">
-        <DialogHeader>
-          <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center mb-2">
-            <Dices className="w-5 h-5" />
-          </div>
-          <DialogTitle>Pilih Karyawan Acak</DialogTitle>
-          <DialogDescription>
-            Pilih secara acak peserta di dalam ruangan rapat untuk berbicara berikutnya atau memimpin sesi demo.
-          </DialogDescription>
-        </DialogHeader>
+      {/* MODAL: RANDOM USER PICKER (Super Admin only) */}
+      {isSuperAdmin && (
+        <Dialog open={randomPickerModalOpen} onOpenChange={setRandomPickerModalOpen} className="max-w-md bg-card">
+          <DialogHeader>
+            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center mb-2">
+              <Dices className="w-5 h-5" />
+            </div>
+            <DialogTitle>Pilih Karyawan Acak</DialogTitle>
+            <DialogDescription>
+              Pilih secara acak peserta di dalam ruangan rapat untuk berbicara berikutnya atau memimpin sesi demo.
+            </DialogDescription>
+          </DialogHeader>
 
-        {/* Clean Result Without Black Box Card */}
-        {(isSpinningPicker || pickedUser) && (
-          <div className="text-center py-4 space-y-2 animate-in zoom-in-95">
-            {isSpinningPicker ? (
-              <div className="space-y-1.5">
-                <div className="text-2xl font-extrabold text-amber-600 animate-pulse">
-                  {pickedUser || "Memilih peserta..."}
-                </div>
-                <div className="text-xs text-slate-500 font-medium">Mengacak dari {participants.length} peserta di ruangan...</div>
-              </div>
-            ) : pickedUser ? (
-              <div className="space-y-2">
-                <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto border-2 border-amber-300 shadow-sm">
-                  <Crown className="w-6 h-6 fill-current" />
-                </div>
-                <div>
-                  <div className="text-[11px] text-amber-700 font-bold uppercase tracking-wider">Peserta Terpilih:</div>
-                  <div className="text-xl font-bold text-slate-900 mt-0.5">{pickedUser}</div>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setRandomPickerModalOpen(false)}
-            className="text-slate-900 bg-white hover:bg-slate-100 border-slate-300 font-bold cursor-pointer"
-          >
-            Tutup
-          </Button>
-          <Button
-            onClick={handlePickRandomUser}
-            disabled={isSpinningPicker}
-            className="gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer"
-          >
-            <Dices className="w-4 h-4" />
-            <span>{isSpinningPicker ? "Mengacak..." : "Putar Pengacak"}</span>
-          </Button>
-        </DialogFooter>
-      </Dialog>
-
-      {/* MODAL: INSTANT CALL / INVITE EMPLOYEE */}
-      <Dialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
-        <DialogHeader>
-          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-2">
-            <UserPlus className="w-5 h-5" />
-          </div>
-          <DialogTitle>Panggil Karyawan ke Rapat Ini</DialogTitle>
-          <DialogDescription>
-            Panggil rekan kerja kantor langsung ke ruang <span className="font-semibold text-foreground">&quot;{initialMeeting.title}&quot;</span>. Layar mereka akan berdering instan.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-3 my-3">
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-2.5" />
-            <Input
-              value={inviteSearch}
-              onChange={(e) => setInviteSearch(e.target.value)}
-              placeholder="Cari nama karyawan atau divisi..."
-              className="pl-8 text-xs h-8"
-            />
-          </div>
-
-          <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1 text-xs">
-            {INITIAL_EMPLOYEES.filter(
-              (e) =>
-                !participants.some((p) => p.name.includes(e.name)) &&
-                (e.name.toLowerCase().includes(inviteSearch.toLowerCase()) ||
-                  e.department.toLowerCase().includes(inviteSearch.toLowerCase()) ||
-                  e.role.toLowerCase().includes(inviteSearch.toLowerCase()))
-            )
-              .slice(0, 8)
-              .map((emp) => (
-                <div
-                  key={emp.id}
-                  className="flex items-center justify-between p-2 rounded-xl border border-border hover:bg-muted/40 transition-colors"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <img src={emp.avatar} alt={emp.name} className="w-7 h-7 rounded-full object-cover" />
-                    <div>
-                      <div className="font-semibold text-foreground text-xs">{emp.name}</div>
-                      <div className="text-[10px] text-muted-foreground">{emp.role} • {emp.department}</div>
-                    </div>
+          {/* Clean Result Without Black Box Card */}
+          {(isSpinningPicker || pickedUser) && (
+            <div className="text-center py-4 space-y-2 animate-in zoom-in-95">
+              {isSpinningPicker ? (
+                <div className="space-y-1.5">
+                  <div className="text-2xl font-extrabold text-amber-600 animate-pulse">
+                    {pickedUser || "Memilih peserta..."}
                   </div>
-
-                  <Button
-                    size="sm"
-                    onClick={() => handleInstantCallEmployee(emp)}
-                    className="h-7 text-xs gap-1"
-                  >
-                    <PhoneCall className="w-3 h-3" /> Panggil
-                  </Button>
+                  <div className="text-xs text-slate-500 font-medium">Mengacak dari {participants.length} peserta di ruangan...</div>
                 </div>
-              ))}
-          </div>
-        </div>
+              ) : pickedUser ? (
+                <div className="space-y-2">
+                  <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto border-2 border-amber-300 shadow-sm">
+                    <Crown className="w-6 h-6 fill-current" />
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-amber-700 font-bold uppercase tracking-wider">Peserta Terpilih:</div>
+                    <div className="text-xl font-bold text-slate-900 mt-0.5">{pickedUser}</div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setInviteModalOpen(false)}>
-            Tutup
-          </Button>
-        </DialogFooter>
-      </Dialog>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setRandomPickerModalOpen(false)}
+              className="text-slate-900 bg-white hover:bg-slate-100 border-slate-300 font-bold cursor-pointer"
+            >
+              Tutup
+            </Button>
+            <Button
+              onClick={handlePickRandomUser}
+              disabled={isSpinningPicker}
+              className="gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer"
+            >
+              <Dices className="w-4 h-4" />
+              <span>{isSpinningPicker ? "Mengacak..." : "Putar Pengacak"}</span>
+            </Button>
+          </DialogFooter>
+        </Dialog>
+      )}
+
+      {/* MODAL: INSTANT CALL / INVITE EMPLOYEE (Super Admin only) */}
+      {isSuperAdmin && (
+        <Dialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
+          <DialogHeader>
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-2">
+              <UserPlus className="w-5 h-5" />
+            </div>
+            <DialogTitle>Panggil Karyawan ke Rapat Ini</DialogTitle>
+            <DialogDescription>
+              Panggil rekan kerja kantor langsung ke ruang <span className="font-semibold text-foreground">&quot;{initialMeeting.title}&quot;</span>. Layar mereka akan berdering instan.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 my-3">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-2.5" />
+              <Input
+                value={inviteSearch}
+                onChange={(e) => setInviteSearch(e.target.value)}
+                placeholder="Cari nama karyawan atau divisi..."
+                className="pl-8 text-xs h-8"
+              />
+            </div>
+
+            <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1 text-xs">
+              {INITIAL_EMPLOYEES.filter(
+                (e) =>
+                  !participants.some((p) => p.name.includes(e.name)) &&
+                  (e.name.toLowerCase().includes(inviteSearch.toLowerCase()) ||
+                    e.department.toLowerCase().includes(inviteSearch.toLowerCase()) ||
+                    e.role.toLowerCase().includes(inviteSearch.toLowerCase()))
+              )
+                .slice(0, 8)
+                .map((emp) => (
+                  <div
+                    key={emp.id}
+                    className="flex items-center justify-between p-2 rounded-xl border border-border hover:bg-muted/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <img src={emp.avatar} alt={emp.name} className="w-7 h-7 rounded-full object-cover" />
+                      <div>
+                        <div className="font-semibold text-foreground text-xs">{emp.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{emp.role} • {emp.department}</div>
+                      </div>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      onClick={() => handleInstantCallEmployee(emp)}
+                      className="h-7 text-xs gap-1"
+                    >
+                      <PhoneCall className="w-3 h-3" /> Panggil
+                    </Button>
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteModalOpen(false)}>
+              Tutup
+            </Button>
+          </DialogFooter>
+        </Dialog>
+      )}
 
       {/* MODAL: LEAVE CONFIRMATION (KELUAR SENDIRI) */}
       <Dialog open={leaveModalOpen} onOpenChange={setLeaveModalOpen}>
@@ -2798,45 +2760,47 @@ function InMeetingContent() {
             variant="destructive"
             onClick={() => {
               setLeaveModalOpen(false);
-              router.push("/admin");
+              router.push(isSuperAdmin ? "/admin" : "/");
             }}
             className="text-xs gap-1.5"
           >
-            <PhoneOff className="w-3.5 h-3.5" /> Keluar ke Dashboard
+            <PhoneOff className="w-3.5 h-3.5" /> {isSuperAdmin ? "Keluar ke Dashboard" : "Keluar dari Rapat"}
           </Button>
         </DialogFooter>
       </Dialog>
 
-      {/* MODAL: END MEETING FOR ALL (AKHIRI RAPAT UNTUK SELURUH PESERTA) */}
-      <Dialog open={endMeetingForAllModalOpen} onOpenChange={setEndMeetingForAllModalOpen}>
-        <DialogHeader>
-          <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center mb-2">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <DialogTitle>Akhiri Rapat untuk Seluruh Peserta?</DialogTitle>
-          <DialogDescription>
-            Sebagai Super Admin, tindakan ini akan menutup ruang rapat <span className="font-semibold text-foreground">&quot;{initialMeeting.title}&quot;</span> (#{initialMeeting.roomCode}) dan mengeluarkan seluruh peserta secara serentak. Rekaman cloud akan difinalisasi.
-          </DialogDescription>
-        </DialogHeader>
+      {/* MODAL: END MEETING FOR ALL (AKHIRI RAPAT UNTUK SELURUH PESERTA - Super Admin only) */}
+      {isSuperAdmin && (
+        <Dialog open={endMeetingForAllModalOpen} onOpenChange={setEndMeetingForAllModalOpen}>
+          <DialogHeader>
+            <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center mb-2">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <DialogTitle>Akhiri Rapat untuk Seluruh Peserta?</DialogTitle>
+            <DialogDescription>
+              Sebagai Super Admin, tindakan ini akan menutup ruang rapat <span className="font-semibold text-foreground">&quot;{initialMeeting.title}&quot;</span> (#{initialMeeting.roomCode}) dan mengeluarkan seluruh peserta secara serentak. Rekaman cloud akan difinalisasi.
+            </DialogDescription>
+          </DialogHeader>
 
-        <DialogFooter className="flex items-center justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setEndMeetingForAllModalOpen(false)}
-            className="text-xs text-slate-800 bg-white hover:bg-slate-100 border-slate-300 font-semibold cursor-pointer"
-          >
-            Batal
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleEndMeetingForAll}
-            className="text-xs gap-1.5 font-bold bg-red-700 hover:bg-red-800"
-          >
-            <PhoneOff className="w-3.5 h-3.5" /> Akhiri untuk Semua
-          </Button>
-        </DialogFooter>
-      </Dialog>
+          <DialogFooter className="flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEndMeetingForAllModalOpen(false)}
+              className="text-xs text-slate-800 bg-white hover:bg-slate-100 border-slate-300 font-semibold cursor-pointer"
+            >
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleEndMeetingForAll}
+              className="text-xs gap-1.5 font-bold bg-red-700 hover:bg-red-800"
+            >
+              <PhoneOff className="w-3.5 h-3.5" /> Akhiri untuk Semua
+            </Button>
+          </DialogFooter>
+        </Dialog>
+      )}
     </div>
   );
 }
