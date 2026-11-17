@@ -321,67 +321,77 @@ export default function AdminOverviewPage() {
 
                     {/* Actions */}
                     <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1.5">
                         {/* Join live meeting */}
-                        <Link href={`/meet/${m.roomCode}`}>
+                        <div>
+                          <Link href={`/meet/${m.roomCode}`}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-8 h-8 p-0 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer"
+                              title="Masuk ke Ruangan Rapat Ini"
+                            >
+                              <Video className="w-3.5 h-3.5" />
+                              <span className="sr-only">Masuk</span>
+                            </Button>
+                          </Link>
+                        </div>
+
+                        {/* View attendees */}
+                        <div>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="w-8 h-8 p-0 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer"
-                            title="Masuk ke Ruangan Rapat Ini"
+                            onClick={() => setSelectedMeeting(m)}
+                            className="w-8 h-8 p-0 border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                            title="Lihat Daftar Peserta"
                           >
-                            <Video className="w-3.5 h-3.5" />
-                            <span className="sr-only">Masuk</span>
+                            <Eye className="w-3.5 h-3.5" />
+                            <span className="sr-only">Peserta</span>
                           </Button>
-                        </Link>
-
-                        {/* View attendees */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedMeeting(m)}
-                          className="w-8 h-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                          title="Lihat Daftar Peserta"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span className="sr-only">Peserta</span>
-                        </Button>
+                        </div>
 
                         {/* Edit Room */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleOpenEditModal(m)}
-                          className="w-8 h-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors cursor-pointer"
-                          title="Edit Pengaturan Ruang Rapat"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                          <span className="sr-only">Edit</span>
-                        </Button>
+                        <div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenEditModal(m)}
+                            className="w-8 h-8 p-0 border-blue-200 text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors cursor-pointer"
+                            title="Edit Pengaturan Ruang Rapat"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                        </div>
 
                         {/* Toggle lock */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleToggleLock(m.id)}
-                          className="w-8 h-8 p-0 cursor-pointer"
-                          title={m.isLocked ? "Buka Kunci Ruangan" : "Kunci Ruangan"}
-                        >
-                          {m.isLocked ? <Unlock className="w-3.5 h-3.5 text-amber-600" /> : <Lock className="w-3.5 h-3.5" />}
-                          <span className="sr-only">{m.isLocked ? "Buka Kunci" : "Kunci"}</span>
-                        </Button>
+                        <div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleToggleLock(m.id)}
+                            className="w-8 h-8 p-0 border-border cursor-pointer hover:bg-muted"
+                            title={m.isLocked ? "Buka Kunci Ruangan" : "Kunci Ruangan"}
+                          >
+                            {m.isLocked ? <Unlock className="w-3.5 h-3.5 text-amber-600" /> : <Lock className="w-3.5 h-3.5" />}
+                            <span className="sr-only">{m.isLocked ? "Buka Kunci" : "Kunci"}</span>
+                          </Button>
+                        </div>
 
                         {/* Terminate session */}
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => setEndMeetingDialog(m)}
-                          className="w-8 h-8 p-0 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors cursor-pointer"
-                          title="Hentikan Sesi Rapat"
-                        >
-                          <PhoneOff className="w-3.5 h-3.5" />
-                          <span className="sr-only">Akhiri</span>
-                        </Button>
+                        <div>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setEndMeetingDialog(m)}
+                            className="w-8 h-8 p-0 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors cursor-pointer"
+                            title="Hentikan Sesi Rapat"
+                          >
+                            <PhoneOff className="w-3.5 h-3.5" />
+                            <span className="sr-only">Akhiri</span>
+                          </Button>
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -566,36 +576,8 @@ export default function AdminOverviewPage() {
                   <Shield className="w-3.5 h-3.5 text-primary" /> Keamanan & Kontrol Sesi
                 </div>
 
-                {/* Kunci Ruangan */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium text-foreground">Kunci Ruang Rapat</div>
-                    <div className="text-[11px] text-muted-foreground">Cegah peserta baru bergabung tanpa izin</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={editIsLocked}
-                    onChange={(e) => setEditIsLocked(e.target.checked)}
-                    className="w-4 h-4 accent-primary rounded cursor-pointer"
-                  />
-                </div>
-
-                {/* Rekam Otomatis */}
-                <div className="flex items-center justify-between pt-2 border-t border-border/60">
-                  <div>
-                    <div className="font-medium text-foreground">Perekaman Cloud Otomatis</div>
-                    <div className="text-[11px] text-muted-foreground">Simpan arsip video & audio rapat secara cloud</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={editIsRecording}
-                    onChange={(e) => setEditIsRecording(e.target.checked)}
-                    className="w-4 h-4 accent-primary rounded cursor-pointer"
-                  />
-                </div>
-
                 {/* Kata Sandi */}
-                <div className="flex items-center justify-between pt-2 border-t border-border/60">
+                <div className="flex items-center justify-between">
                   <div>
                     <div className="font-medium text-foreground">Lindungi dengan PIN / Kata Sandi</div>
                     <div className="text-[11px] text-muted-foreground">Wajibkan PIN sebelum peserta dapat masuk</div>

@@ -1,122 +1,377 @@
-import Link from "next/link";
-import { Radio, ShieldCheck, Video, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+"use client";
 
-export default function HomePage() {
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { User, Lock, Eye, EyeOff, Loader2, ShieldCheck, Video, ArrowRight } from "lucide-react";
+import { INITIAL_EMPLOYEES } from "@/lib/mock-data";
+
+// Helper to determine destination based on email input
+function resolveUserDestination(emailInput: string) {
+  const cleanEmail = emailInput.trim().toLowerCase();
+
+  // Super admin check
+  const isAdmin =
+    cleanEmail.includes("admin") ||
+    cleanEmail === "arman@falah.one" ||
+    cleanEmail === "superadmin@falah.one" ||
+    cleanEmail.startsWith("admin.") ||
+    cleanEmail.startsWith("super.");
+
+  if (isAdmin) {
+    return {
+      isAdmin: true,
+      roleName: "Super Admin",
+      destination: "/admin",
+      label: "Super Admin Console",
+      subLabel: "Akses Penuh Manajemen Rapat",
+      roomCode: null,
+    };
+  }
+
+  // Regular user check: Match known employee
+  const matchedEmp = INITIAL_EMPLOYEES.find(
+    (e) => e.email.toLowerCase() === cleanEmail
+  );
+
+  let targetRoom = "eng-sprint-42";
+  let meetingTitle = "Sprint Planning & Backlog Refinement";
+
+  if (matchedEmp) {
+    if (matchedEmp.department === "Product & Design") {
+      targetRoom = "des-critique-hub";
+      meetingTitle = "Weekly Product Design Critique";
+    } else if (matchedEmp.department === "Marketing & Growth") {
+      targetRoom = "mkt-q4-sync";
+      meetingTitle = "Q4 Marketing Campaign Strategy";
+    } else if (matchedEmp.department === "Executive" || matchedEmp.department === "People & Operations") {
+      targetRoom = "all-hands-q4";
+      meetingTitle = "Monthly Town Hall / All-Hands";
+    } else {
+      targetRoom = "eng-sprint-42";
+      meetingTitle = "Sprint Planning & Backlog Refinement";
+    }
+  }
+
+  return {
+    isAdmin: false,
+    roleName: matchedEmp ? matchedEmp.name : "Karyawan",
+    destination: `/meet/${targetRoom}?role=user`,
+    label: meetingTitle,
+    subLabel: `Ruang Rapat Undangan: ${targetRoom}`,
+    roomCode: targetRoom,
+  };
+}
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = React.useState("arman@falah.one");
+  const [password, setPassword] = React.useState("superadmin2026");
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const targetInfo = resolveUserDestination(email);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) return;
+
+    setIsLoading(true);
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("falah_user_role", targetInfo.isAdmin ? "admin" : "user");
+      localStorage.setItem("falah_user_email", email.trim());
+      localStorage.setItem("falah_user_name", targetInfo.roleName);
+    }
+
+    setTimeout(() => {
+      router.push(targetInfo.destination);
+    }, 600);
+  };
+
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-between p-6 sm:p-12 text-foreground antialiased selection:bg-primary/20">
-      {/* Header */}
-      <header className="max-w-5xl w-full mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm">
-            <Radio className="w-5 h-5 animate-pulse text-white" />
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden bg-[#030712] select-none">
+      {/* 3D ARCHITECTURAL RIBBON BACKGROUND (Blue themed inspired by LiveKit design) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <svg
+          className="w-full h-full object-cover min-w-[1280px] min-h-[800px] opacity-90"
+          viewBox="0 0 1920 1080"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="xMidYMid slice"
+        >
+          <defs>
+            {/* Fine slotted ribbed texture pattern */}
+            <pattern id="slats-pattern" width="20" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(25)">
+              <line x1="0" y1="0" x2="20" y2="0" stroke="#000000" strokeWidth="2.5" opacity="0.65" />
+              <line x1="0" y1="4" x2="20" y2="4" stroke="#60a5fa" strokeWidth="0.8" opacity="0.25" />
+            </pattern>
+
+            {/* Glowing Blue Gradients */}
+            <linearGradient id="ribbon-glow-1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.9" />
+              <stop offset="35%" stopColor="#2563eb" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#1e3a8a" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#090d16" stopOpacity="0.95" />
+            </linearGradient>
+
+            <linearGradient id="ribbon-glow-2" x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.85" />
+              <stop offset="40%" stopColor="#1d4ed8" stopOpacity="0.75" />
+              <stop offset="85%" stopColor="#0b1329" stopOpacity="0.9" />
+            </linearGradient>
+
+            <linearGradient id="ribbon-glow-3" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0284c7" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#1e40af" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="0.95" />
+            </linearGradient>
+
+            <radialGradient id="center-spotlight" cx="65%" cy="45%" r="50%">
+              <stop offset="0%" stopColor="#1d4ed8" stopOpacity="0.35" />
+              <stop offset="60%" stopColor="#0f172a" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#030712" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+
+          {/* Deep Ambient Base */}
+          <rect width="1920" height="1080" fill="#030712" />
+          <rect width="1920" height="1080" fill="url(#center-spotlight)" />
+
+          {/* Ribbon 1 - Deep Background Wave */}
+          <path
+            d="M-100,-100 C300,200 600,600 1200,1200 L1400,1200 C800,600 500,200 100,-100 Z"
+            fill="url(#ribbon-glow-3)"
+            opacity="0.5"
+          />
+
+          {/* Ribbon 2 - Large Sweeping Blade Top Right to Center */}
+          <path
+            d="M800,-200 C1100,150 1400,500 2100,800 L2000,950 C1300,650 1000,300 700,-100 Z"
+            fill="url(#ribbon-glow-1)"
+          />
+          <path
+            d="M800,-200 C1100,150 1400,500 2100,800 L2000,950 C1300,650 1000,300 700,-100 Z"
+            fill="url(#slats-pattern)"
+          />
+
+          {/* Ribbon 3 - Dramatic Central Wave Crossing Screen */}
+          <path
+            d="M200,-150 C550,250 850,550 1850,1150 L1700,1250 C700,650 400,350 50,-50 Z"
+            fill="url(#ribbon-glow-2)"
+          />
+          <path
+            d="M200,-150 C550,250 850,550 1850,1150 L1700,1250 C700,650 400,350 50,-50 Z"
+            fill="url(#slats-pattern)"
+          />
+
+          {/* Ribbon 4 - Bottom Left Foreground Fin */}
+          <path
+            d="M-200,300 C150,550 450,850 1000,1300 L850,1350 C300,900 0,600 -350,350 Z"
+            fill="url(#ribbon-glow-1)"
+            opacity="0.8"
+          />
+          <path
+            d="M-200,300 C150,550 450,850 1000,1300 L850,1350 C300,900 0,600 -350,350 Z"
+            fill="url(#slats-pattern)"
+          />
+
+          {/* Ribbon 5 - Thin Radiant Edge Highlights */}
+          <path
+            d="M205,-145 C555,255 855,555 1855,1155"
+            stroke="#93c5fd"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+            opacity="0.9"
+            filter="drop-shadow(0 0 8px #3b82f6)"
+          />
+          <path
+            d="M805,-195 C1105,155 1405,505 2105,805"
+            stroke="#60a5fa"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            opacity="0.8"
+            filter="drop-shadow(0 0 6px #2563eb)"
+          />
+          <path
+            d="M-195,305 C155,555 455,855 1005,1305"
+            stroke="#38bdf8"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            opacity="0.85"
+            filter="drop-shadow(0 0 6px #0ea5e9)"
+          />
+
+          {/* Subtle Vignette Overlay */}
+          <rect width="1920" height="1080" fill="black" opacity="0.25" />
+        </svg>
+      </div>
+
+      {/* FLOATING LOGIN CONTAINER (Figma LiveKit Style) */}
+      <div className="relative z-10 w-full max-w-[800px] rounded-2xl overflow-hidden shadow-2xl border border-white/10 grid grid-cols-1 md:grid-cols-2 backdrop-blur-xs">
+        {/* LEFT COLUMN: Clean White Form Area */}
+        <div className="bg-white p-7 sm:p-10 flex flex-col justify-center">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold tracking-tight text-[#1e3a8a]">
+              Selamat Datang
+            </h2>
+            <p className="text-xs text-slate-500 mt-1 font-medium">
+              Masuk ke akun Anda
+            </p>
           </div>
-          <div>
-            <div className="font-bold text-base tracking-tight flex items-center gap-1.5">
-              <span>Falah Meet</span>
-              <span className="text-secondary text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-secondary/10">v2.0</span>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            {/* Email Field */}
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-slate-700">
+                Email
+              </label>
+              <div className="relative">
+                <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="falah@email.com"
+                  required
+                  className="w-full h-10 pl-9 pr-3 text-xs bg-white rounded-lg border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#1e3a8a] focus:ring-1 focus:ring-[#1e3a8a] transition-all"
+                />
+              </div>
             </div>
-            <div className="text-[11px] text-muted-foreground font-medium">Enterprise WebRTC • 180 Karyawan</div>
+
+            {/* Password Field */}
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-slate-700">
+                Sandi
+              </label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  required
+                  className="w-full h-10 pl-9 pr-9 text-xs bg-white rounded-lg border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#1e3a8a] focus:ring-1 focus:ring-[#1e3a8a] transition-all font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Sembunyikan sandi" : "Tampilkan sandi"}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Dynamic Role / Destination Detection Box */}
+            <div
+              className={`p-2.5 rounded-lg border text-[11px] transition-all flex items-center gap-2 ${
+                targetInfo.isAdmin
+                  ? "bg-blue-50/80 border-blue-200 text-blue-900"
+                  : "bg-emerald-50/80 border-emerald-200 text-emerald-900"
+              }`}
+            >
+              {targetInfo.isAdmin ? (
+                <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+              ) : (
+                <Video className="w-4 h-4 text-emerald-600 shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <span className="font-semibold">
+                  {targetInfo.isAdmin ? "Super Admin:" : "Karyawan Biasa:"}
+                </span>{" "}
+                <span className="opacity-80">Tujuan &rarr;</span>{" "}
+                <span className="font-medium underline decoration-dotted truncate inline-block max-w-[170px] align-bottom">
+                  {targetInfo.isAdmin ? "/admin (Console)" : targetInfo.label}
+                </span>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-10 mt-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1e40af] active:bg-[#172554] text-white text-xs font-semibold tracking-wide shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Memverifikasi...</span>
+                </>
+              ) : (
+                <span>
+                  {targetInfo.isAdmin ? "Masuk ke Super Admin Console" : "Masuk ke Ruang Rapat"}
+                </span>
+              )}
+            </button>
+          </form>
+
+          {/* Quick Demo Fill Buttons */}
+          <div className="mt-4 pt-3 border-t border-slate-100">
+            <div className="text-[10px] text-slate-400 mb-1.5 text-center font-medium">
+              Pintasan Akun Demo
+            </div>
+            <div className="flex items-center gap-2 text-[10px]">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("arman@falah.one");
+                  setPassword("superadmin2026");
+                }}
+                className={`flex-1 py-1.5 px-2 rounded-md border transition-all text-center cursor-pointer truncate ${
+                  targetInfo.isAdmin
+                    ? "bg-blue-50 border-blue-300 text-blue-700 font-semibold shadow-2xs"
+                    : "border-slate-200 bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-600"
+                }`}
+                title="Isi kredensial Super Admin"
+              >
+                👑 Demo Super Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("dimas.a@falah.one");
+                  setPassword("karyawan2026");
+                }}
+                className={`flex-1 py-1.5 px-2 rounded-md border transition-all text-center cursor-pointer truncate ${
+                  !targetInfo.isAdmin
+                    ? "bg-emerald-50 border-emerald-300 text-emerald-700 font-semibold shadow-2xs"
+                    : "border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600"
+                }`}
+                title="Isi kredensial Karyawan Biasa (Langsung ke Ruang Rapat)"
+              >
+                👤 Demo Karyawan
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Link href="/login">
-            <span className="text-xs font-semibold px-3.5 py-1.5 rounded-lg border border-border bg-card hover:bg-muted text-foreground transition-colors cursor-pointer inline-flex items-center gap-1.5 shadow-2xs">
-              Masuk (Login)
-            </span>
-          </Link>
-          <Badge variant="success" className="gap-1.5 py-1 px-3 text-xs hidden sm:inline-flex">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-            LiveKit SFU Online
-          </Badge>
+        {/* RIGHT COLUMN: Dark Translucent Glass with Headline & Tagline */}
+        <div className="relative bg-black/45 backdrop-blur-xl border-t md:border-t-0 md:border-l border-white/10 p-8 sm:p-11 flex flex-col items-center justify-center text-center overflow-hidden">
+          {/* Subtle blue ambient light behind text */}
+          <div className="absolute w-48 h-48 rounded-full bg-blue-600/20 blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 space-y-2">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-wider text-white uppercase drop-shadow-md">
+              Falah Meet
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 font-medium tracking-wide">
+              Where Teams Collaborate
+            </p>
+          </div>
         </div>
-      </header>
+      </div>
 
-      {/* Main hero & role portal */}
-      <main className="max-w-3xl w-full mx-auto my-12 space-y-8 text-center">
-        <div className="space-y-3">
-          <Badge variant="secondary" className="px-3 py-1 text-xs font-semibold gap-1.5 mx-auto">
-            <Sparkles className="w-3.5 h-3.5 text-secondary" />
-            Remake Internal v2.0 • Falah Meet Platform
-          </Badge>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground">
-            Platform Rapat Video Internal Kantor
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto">
-            Sistem konferensi video real-time bertenaga LiveKit, dirancang seamless seperti Google Meet dan Apple FaceTime, bebas dari birokrasi kontrak lama.
-          </p>
-        </div>
-
-        {/* Action Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-left pt-4">
-          {/* Card 1: Super Admin Console (The primary requested module) */}
-          <Link href="/login" className="group block">
-            <Card className="p-6 h-full border-primary/30 hover:border-primary transition-all shadow-xs hover:shadow-lg bg-gradient-to-br from-card to-blue-50/20 relative overflow-hidden">
-              <div className="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-sm">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                  Super Admin Dashboard
-                </h2>
-                <Badge variant="outline" className="text-[10px] text-primary border-primary/40 bg-primary/5">
-                  Requested Prototype
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                Kendali penuh manajemen: Pantau sesi rapat aktif real-time, direktori 180 karyawan, arsip rekaman cloud, dan konfigurasi rapat.
-              </p>
-              <div className="mt-5 flex items-center text-xs font-semibold text-primary gap-1 group-hover:translate-x-1 transition-transform">
-                <span>Login ke Super Admin Console</span>
-                <ArrowRight className="w-4 h-4" />
-              </div>
-            </Card>
-          </Link>
-
-          {/* Card 2: Quick Meeting Join / Client Info */}
-          <Link href="/meet/eng-sprint-42" className="group block">
-            <Card className="p-6 h-full border-border hover:border-secondary/50 bg-card shadow-xs hover:shadow-lg transition-all flex flex-col justify-between">
-              <div>
-                <div className="w-12 h-12 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                  <Video className="w-6 h-6" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-foreground group-hover:text-secondary transition-colors">
-                    Ruang Rapat Instan
-                  </h2>
-                  <Badge variant="secondary" className="text-[10px]">
-                    User Client
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                  Bagi karyawan biasa, rapat dapat langsung dimulai dengan 1-klik tanpa konfigurasi akun manual atau approval moderator.
-                </p>
-                <div className="mt-4 flex items-center text-xs font-semibold text-secondary gap-1 group-hover:translate-x-1 transition-transform">
-                  <span>Masuk ke Ruang Rapat (Lobby & In-Meeting)</span>
-                  <ArrowRight className="w-4 h-4" />
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-border mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> WebRTC SFU
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> 1080p HD
-                </span>
-              </div>
-            </Card>
-          </Link>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="max-w-5xl w-full mx-auto pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between text-xs text-muted-foreground gap-2">
-        <div>© 2026 Falah Meet • Hak Cipta Internal Kantor</div>
-        <div className="font-mono text-[11px]">D:\ARMAN\PROJECT\REMAKE LIVEKIT</div>
-      </footer>
+      {/* FOOTER VERSION OUTSIDE CARD (As in Figma LiveKit) */}
+      <div className="relative z-10 mt-6 text-center">
+        <span className="text-[11px] text-slate-400/90 font-mono tracking-wider">
+          Versi 0.0.1
+        </span>
+      </div>
     </div>
   );
 }

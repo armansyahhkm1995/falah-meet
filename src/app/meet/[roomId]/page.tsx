@@ -221,6 +221,21 @@ function InMeetingContent() {
 
   // POLLING STATE (Replica of existing LiveKit image)
   const [isSuperAdminPollView, setIsSuperAdminPollView] = React.useState(true);
+
+  // Sync role from login (Admin vs User Biasa)
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const roleParam = urlParams.get("role");
+      const storedRole = localStorage.getItem("falah_user_role");
+      if (roleParam === "user" || storedRole === "user") {
+        setIsSuperAdminPollView(false);
+      } else if (roleParam === "admin" || storedRole === "admin") {
+        setIsSuperAdminPollView(true);
+      }
+    }
+  }, []);
+
   const [isCreatePollOpen, setIsCreatePollOpen] = React.useState(true);
   const [newPollQuestion, setNewPollQuestion] = React.useState("");
   const [newPollOption1, setNewPollOption1] = React.useState("");
